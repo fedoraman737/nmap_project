@@ -1,3 +1,0 @@
-/home/fedora12/CLionProjects/nmap_project/cmake-build-debug/CMakeFiles/nmap_project.dir
-/home/fedora12/CLionProjects/nmap_project/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/fedora12/CLionProjects/nmap_project/cmake-build-debug/CMakeFiles/rebuild_cache.dir

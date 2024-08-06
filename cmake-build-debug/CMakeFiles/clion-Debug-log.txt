@@ -1,5 +1,0 @@
-/home/fedora12/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/fedora12/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja -G Ninja -S /home/fedora12/CLionProjects/nmap_project -B /home/fedora12/CLionProjects/nmap_project/cmake-build-debug
--- Found SFML 2.6.1 in /usr/lib64/cmake/SFML
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /home/fedora12/CLionProjects/nmap_project/cmake-build-debug
