@@ -44,8 +44,8 @@ void NetworkMap::draw(sf::RenderWindow& window) {
     hostPositions[hosts[0].ip] = sf::Vector2f(centerX, centerY);
 
     // Calculate positions for other hosts
-    float layerRadius = 150.0f; // Radius of the first layer
-    float radiusIncrement = 150.0f; // Increment for each new layer
+    float layerRadius = 200.0f; // Radius of the first layer
+    float radiusIncrement = 200.0f; // Increment for each new layer
     float angleIncrement = 360.0f / (hosts.size() - 1); // Angle increment for each node
 
     for (size_t i = 1; i < hosts.size(); ++i) {
@@ -110,7 +110,7 @@ void NetworkMap::draw(sf::RenderWindow& window) {
             details.setFont(font); // Set the font
         }
         details.setString(ss.str());
-        details.setCharacterSize(14);
+        details.setCharacterSize(14 * (1.0f / view.getSize().x * window.getSize().x)); // Adjust size based on zoom level
         details.setFillColor(sf::Color::White);
         details.setPosition(10.0f, 10.0f);
         window.draw(details);
@@ -119,7 +119,9 @@ void NetworkMap::draw(sf::RenderWindow& window) {
 
 void NetworkMap::handleEvents(sf::RenderWindow& window, sf::Event& event) {
     if (event.type == sf::Event::MouseWheelScrolled) {
-        view.zoom(event.mouseWheelScroll.delta > 0 ? 0.9f : 1.1f);
+        float zoomFactor = (event.mouseWheelScroll.delta > 0) ? 0.9f : 1.1f;
+        view.zoom(zoomFactor);
+        view.setSize(std::max(view.getSize().x, 800.0f), std::max(view.getSize().y, 600.0f)); // Restrict minimum zoom level
     }
     if (event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Middle) {
@@ -165,8 +167,15 @@ void NetworkMap::handleEvents(sf::RenderWindow& window, sf::Event& event) {
         if (dragging) {
             sf::Vector2f newPos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
             sf::Vector2f deltaPos = oldPos - newPos;
-            view.setCenter(view.getCenter() + deltaPos);
+            view.move(deltaPos);
             oldPos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
         }
     }
+    // Restrict panning within bounds
+    sf::Vector2f viewCenter = view.getCenter();
+    viewCenter.x = std::max(viewCenter.x, 400.0f);
+    viewCenter.y = std::max(viewCenter.y, 300.0f);
+    viewCenter.x = std::min(viewCenter.x, static_cast<float>(window.getSize().x) - 400.0f);
+    viewCenter.y = std::min(viewCenter.y, static_cast<float>(window.getSize().y) - 300.0f);
+    view.setCenter(viewCenter);
 }
