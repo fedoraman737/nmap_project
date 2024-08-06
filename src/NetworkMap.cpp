@@ -37,28 +37,41 @@ void NetworkMap::draw(sf::RenderWindow& window) {
         return;
     }
 
-    float angleIncrement = 360.0f / static_cast<float>(hosts.size());
-    float radius = 300.0f;
     float centerX = static_cast<float>(window.getSize().x) / 2.0f;
     float centerY = static_cast<float>(window.getSize().y) / 2.0f;
 
-    for (size_t i = 0; i < hosts.size(); ++i) {
-        const auto& host = hosts[i];
+    // Central node
+    hostPositions[hosts[0].ip] = sf::Vector2f(centerX, centerY);
+
+    // Calculate positions for other hosts
+    float layerRadius = 150.0f; // Radius of the first layer
+    float radiusIncrement = 150.0f; // Increment for each new layer
+    float angleIncrement = 360.0f / (hosts.size() - 1); // Angle increment for each node
+
+    for (size_t i = 1; i < hosts.size(); ++i) {
+        float angle = (i - 1) * angleIncrement;
+        float x = centerX + layerRadius * std::cos(angle * M_PI / 180.0f);
+        float y = centerY + layerRadius * std::sin(angle * M_PI / 180.0f);
+
+        hostPositions[hosts[i].ip] = sf::Vector2f(x, y);
+
+        if (i % 8 == 0) { // Increase radius every 8 nodes
+            layerRadius += radiusIncrement;
+        }
+    }
+
+    // Draw nodes and connections
+    for (const auto& host : hosts) {
         sf::CircleShape node(10.0f);
         node.setOrigin(10.0f, 10.0f); // Center the origin
         node.setFillColor(isNodeHighlighted && hostPositions[host.ip] == highlightedNode ? sf::Color::Red :
                           isNodeHovered && hostPositions[host.ip] == hoveredNode ? sf::Color::Yellow :
                           sf::Color::Green);
 
-        float angle = angleIncrement * static_cast<float>(i);
-        float x = centerX + radius * std::cos(angle * M_PI / 180.0f);
-        float y = centerY + radius * std::sin(angle * M_PI / 180.0f);
-        node.setPosition(x, y);
+        node.setPosition(hostPositions[host.ip]);
         window.draw(node);
 
-        hostPositions[host.ip] = sf::Vector2f(x, y);
-
-        float text_y = y + 20.0f;
+        float text_y = hostPositions[host.ip].y + 20.0f;
         for (const auto& port : host.openPorts) {
             sf::Text text;
             if (fontLoaded) {
@@ -67,18 +80,19 @@ void NetworkMap::draw(sf::RenderWindow& window) {
             text.setString(port);
             text.setCharacterSize(12);
             text.setFillColor(sf::Color::White);
-            text.setPosition(x, text_y);
+            text.setPosition(hostPositions[host.ip].x, text_y);
             window.draw(text);
             text_y += 20.0f;
         }
     }
 
+    // Draw lines connecting each host to the central node
     sf::Vector2f centerPos = hostPositions[hosts[0].ip];
-    for (const auto& [ip, position] : hostPositions) {
-        if (ip != hosts[0].ip) {
+    for (const auto& host : hosts) {
+        if (host.ip != hosts[0].ip) {
             sf::Vertex line[] = {
                 sf::Vertex(centerPos),
-                sf::Vertex(position)
+                sf::Vertex(hostPositions[host.ip])
             };
             window.draw(line, 2, sf::Lines);
         }
