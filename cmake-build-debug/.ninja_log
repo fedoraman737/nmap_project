@@ -1,0 +1,9 @@
+# ninja log v6
+0	2	1722963057110946991	clean	af5548df26161c1f
+1	203	1722963057215949125	CMakeFiles/nmap_project.dir/src/NmapParser.cpp.o	61122665387bee95
+0	287	1722963057214949105	CMakeFiles/nmap_project.dir/src/main.cpp.o	6d90e9a6bdba36b8
+1	3	1722963139325617528	clean	af5548df26161c1f
+1	5	1722963139455620170	CMakeFiles/nmap_project.dir/src/NmapParser.cpp.o	61122665387bee95
+1	6	1722963139455620170	CMakeFiles/nmap_project.dir/src/main.cpp.o	6d90e9a6bdba36b8
+1	298	1722963139455620170	CMakeFiles/nmap_project.dir/src/NetworkMap.cpp.o	3e46071ed906f40f
+298	349	1722963139752626205	nmap_project	17bd2a52f73b8833

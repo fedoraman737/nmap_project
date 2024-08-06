@@ -1,16 +1,18 @@
-//
-// Created by fedora12 on 8/6/24.
-//
+#ifndef NMAP_PARSER_H
+#define NMAP_PARSER_H
 
-#ifndef NMAPPARSER_H
-#define NMAPPARSER_H
+#include "tinyxml2.h"
+#include <vector>
+#include <string>
 
-
-
-class NmapParser {
-
+struct Host {
+    std::string ip;
+    std::vector<std::string> openPorts;
 };
 
+class NmapParser {
+public:
+    std::vector<Host> parseNmapXML(const std::string& filename);
+};
 
-
-#endif //NMAPPARSER_H
+#endif // NMAP_PARSER_H

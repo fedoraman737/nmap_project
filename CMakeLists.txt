@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(NetworkVisualizer)
+project(nmap_project)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(include)
 
 # Add sources
-add_executable(NetworkVisualizer src/main.cpp src/NmapParser.cpp src/NetworkMap.cpp
+add_executable(nmap_project
+        src/main.cpp
         src/NmapParser.cpp
         src/NmapParser.h
         src/NetworkMap.cpp
@@ -15,8 +16,11 @@ add_executable(NetworkVisualizer src/main.cpp src/NmapParser.cpp src/NetworkMap.
 
 # Find and link SFML
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
-target_link_libraries(NetworkVisualizer sfml-graphics sfml-window sfml-system)
+target_link_libraries(nmap_project sfml-graphics sfml-window sfml-system)
 
-# Find and link TinyXML2
-find_package(TinyXML2 REQUIRED)
-target_link_libraries(NetworkVisualizer TinyXML2::TinyXML2)
+# Manually specify TinyXML2 paths
+set(TINYXML2_INCLUDE_DIR /usr/include)
+set(TINYXML2_LIBRARY /usr/lib64/libtinyxml2.so)
+
+include_directories(${TINYXML2_INCLUDE_DIR})
+target_link_libraries(nmap_project ${TINYXML2_LIBRARY})
