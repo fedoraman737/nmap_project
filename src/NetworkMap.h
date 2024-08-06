@@ -1,33 +1,35 @@
-#ifndef NETWORK_MAP_H
-#define NETWORK_MAP_H
+#ifndef NETWORKMAP_H
+#define NETWORKMAP_H
 
 #include <SFML/Graphics.hpp>
-#include "NmapParser.h"
-#include <map>
-#include <string>
 #include <vector>
+#include <map>
+#include "Host.h"
 
 class NetworkMap {
 public:
     NetworkMap(const std::vector<Host>& hosts);
-    void draw(sf::RenderWindow& window);
-    void handleEvents(sf::RenderWindow& window, sf::Event& event);
+
+    void draw(sf::RenderWindow& window); // Removed const
+    void handleEvents(sf::RenderWindow& window, const sf::Event& event);
 
 private:
-    void loadFont(const std::string& fontPath);
-
     std::vector<Host> hosts;
     sf::View view;
+    bool dragging = false;
+    bool isNodeHovered = false;
+    bool isNodeHighlighted = false;
+    sf::Vector2f oldPos;
+    sf::Vector2f hoveredNode;
+    sf::Vector2f highlightedNode;
+    Host* selectedHost = nullptr;
+    std::map<std::string, sf::Vector2f> hostPositions;
     sf::Font font;
     bool fontLoaded = false;
-    std::map<std::string, sf::Vector2f> hostPositions;
-    sf::Vector2f highlightedNode;
-    sf::Vector2f hoveredNode;
-    bool isNodeHighlighted = false;
-    bool isNodeHovered = false;
-    Host* selectedHost = nullptr;
-    bool dragging = false;
-    sf::Vector2f oldPos;
+    sf::FloatRect panLimits;
+
+    void loadFont(const std::string& fontPath);
+    void calculatePanLimits();
 };
 
-#endif // NETWORK_MAP_H
+#endif // NETWORKMAP_H

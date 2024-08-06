@@ -1,20 +1,23 @@
+extern "C" {
+    void calculate_delta(float oldX, float oldY, float newX, float newY, float* deltaX, float* deltaY);
+}
+
 #include "NetworkMap.h"
 #include <cmath>
 #include <sstream>
 #include <iostream>
-#include <filesystem> // For file existence check and current path
-#include <fstream> // For file stream
+#include <filesystem>
+#include <fstream>
 
 NetworkMap::NetworkMap(const std::vector<Host>& hosts) : hosts(hosts) {
     view = sf::View(sf::FloatRect(0, 0, 800, 600));
-    loadFont("../fonts/Roboto-Regular.ttf"); // Relative path from cmake-build-debug
+    loadFont("../fonts/Roboto-Regular.ttf");
+    calculatePanLimits();
 }
 
 void NetworkMap::loadFont(const std::string& fontPath) {
-    // Print current working directory
     std::cerr << "Current working directory: " << std::filesystem::current_path() << "\n";
 
-    // Check if the font file exists
     std::ifstream file(fontPath);
     if (!file.good()) {
         std::cerr << "Font file not found: " << fontPath << "\n";
@@ -22,12 +25,30 @@ void NetworkMap::loadFont(const std::string& fontPath) {
         std::cerr << "Font file found: " << fontPath << "\n";
     }
 
-    // Load the Roboto font from the relative path
     if (!font.loadFromFile(fontPath)) {
         std::cerr << "Failed to load font: " << fontPath << "\n";
     } else {
         fontLoaded = true;
     }
+}
+
+void NetworkMap::calculatePanLimits() {
+    if (hosts.empty()) return;
+
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::min();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::min();
+
+    for (const auto& host : hosts) {
+        sf::Vector2f pos = hostPositions[host.ip];
+        if (pos.x < minX) minX = pos.x;
+        if (pos.x > maxX) maxX = pos.x;
+        if (pos.y < minY) minY = pos.y;
+        if (pos.y > maxY) maxY = pos.y;
+    }
+
+    panLimits = sf::FloatRect(minX, minY, maxX - minX, maxY - minY);
 }
 
 void NetworkMap::draw(sf::RenderWindow& window) {
@@ -40,30 +61,27 @@ void NetworkMap::draw(sf::RenderWindow& window) {
     float centerX = static_cast<float>(window.getSize().x) / 2.0f;
     float centerY = static_cast<float>(window.getSize().y) / 2.0f;
 
-    // Central node
     hostPositions[hosts[0].ip] = sf::Vector2f(centerX, centerY);
 
-    // Calculate positions for other hosts
-    float layerRadius = 200.0f; // Radius of the first layer
-    float radiusIncrement = 200.0f; // Increment for each new layer
-    float angleIncrement = 360.0f / (hosts.size() - 1); // Angle increment for each node
+    float layerRadius = 200.0f;
+    float radiusIncrement = 200.0f;
+    float angleIncrement = 360.0f / static_cast<float>(hosts.size() - 1);
 
     for (size_t i = 1; i < hosts.size(); ++i) {
-        float angle = (i - 1) * angleIncrement;
-        float x = centerX + layerRadius * std::cos(angle * M_PI / 180.0f);
-        float y = centerY + layerRadius * std::sin(angle * M_PI / 180.0f);
+        float angle = (static_cast<float>(i) - 1) * angleIncrement;
+        float x = centerX + layerRadius * static_cast<float>(std::cos(angle * M_PI / 180.0));
+        float y = centerY + layerRadius * static_cast<float>(std::sin(angle * M_PI / 180.0));
 
         hostPositions[hosts[i].ip] = sf::Vector2f(x, y);
 
-        if (i % 8 == 0) { // Increase radius every 8 nodes
+        if (i % 8 == 0) {
             layerRadius += radiusIncrement;
         }
     }
 
-    // Draw nodes and connections
     for (const auto& host : hosts) {
         sf::CircleShape node(10.0f);
-        node.setOrigin(10.0f, 10.0f); // Center the origin
+        node.setOrigin(10.0f, 10.0f);
         node.setFillColor(isNodeHighlighted && hostPositions[host.ip] == highlightedNode ? sf::Color::Red :
                           isNodeHovered && hostPositions[host.ip] == hoveredNode ? sf::Color::Yellow :
                           sf::Color::Green);
@@ -75,7 +93,7 @@ void NetworkMap::draw(sf::RenderWindow& window) {
         for (const auto& port : host.openPorts) {
             sf::Text text;
             if (fontLoaded) {
-                text.setFont(font); // Set the font
+                text.setFont(font);
             }
             text.setString(port);
             text.setCharacterSize(12);
@@ -86,7 +104,6 @@ void NetworkMap::draw(sf::RenderWindow& window) {
         }
     }
 
-    // Draw lines connecting each host to the central node
     sf::Vector2f centerPos = hostPositions[hosts[0].ip];
     for (const auto& host : hosts) {
         if (host.ip != hosts[0].ip) {
@@ -98,7 +115,6 @@ void NetworkMap::draw(sf::RenderWindow& window) {
         }
     }
 
-    // Display details of the selected host
     if (selectedHost) {
         std::stringstream ss;
         ss << "Host IP: " << selectedHost->ip << "\n";
@@ -107,39 +123,42 @@ void NetworkMap::draw(sf::RenderWindow& window) {
         }
         sf::Text details;
         if (fontLoaded) {
-            details.setFont(font); // Set the font
+            details.setFont(font);
         }
         details.setString(ss.str());
-        details.setCharacterSize(14 * (1.0f / view.getSize().x * window.getSize().x)); // Adjust size based on zoom level
+        details.setCharacterSize(14);
         details.setFillColor(sf::Color::White);
         details.setPosition(10.0f, 10.0f);
+        window.setView(window.getDefaultView());
         window.draw(details);
+        window.setView(view);
     }
 }
 
-void NetworkMap::handleEvents(sf::RenderWindow& window, sf::Event& event) {
+void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) {
     if (event.type == sf::Event::MouseWheelScrolled) {
         float zoomFactor = (event.mouseWheelScroll.delta > 0) ? 0.9f : 1.1f;
         view.zoom(zoomFactor);
-        view.setSize(std::max(view.getSize().x, 800.0f), std::max(view.getSize().y, 600.0f)); // Restrict minimum zoom level
+        view.setSize(std::max(view.getSize().x, 800.0f), std::max(view.getSize().y, 600.0f));
     }
     if (event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Middle) {
             dragging = true;
             oldPos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+            std::cout << "MouseButtonPressed: " << oldPos.x << ", " << oldPos.y << std::endl;
         } else if (event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
             isNodeHighlighted = false;
             for (const auto& host : hosts) {
                 sf::Vector2f nodePos = hostPositions[host.ip];
                 sf::CircleShape node(10.0f);
-                node.setOrigin(10.0f, 10.0f); // Center the origin
+                node.setOrigin(10.0f, 10.0f);
                 node.setPosition(nodePos);
                 if (node.getGlobalBounds().contains(mousePos)) {
                     highlightedNode = nodePos;
                     isNodeHighlighted = true;
-                    selectedHost = const_cast<Host*>(&host); // Store a pointer to the selected host
-                    std::cout << "Selected host: " << selectedHost->ip << "\n"; // Debug output
+                    selectedHost = const_cast<Host*>(&host);
+                    std::cout << "Selected host: " << selectedHost->ip << "\n";
                     break;
                 }
             }
@@ -148,34 +167,31 @@ void NetworkMap::handleEvents(sf::RenderWindow& window, sf::Event& event) {
     if (event.type == sf::Event::MouseButtonReleased) {
         if (event.mouseButton.button == sf::Mouse::Middle) {
             dragging = false;
+            std::cout << "MouseButtonReleased" << std::endl;
         }
     }
     if (event.type == sf::Event::MouseMoved) {
-        sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
-        isNodeHovered = false;
-        for (const auto& host : hosts) {
-            sf::Vector2f nodePos = hostPositions[host.ip];
-            sf::CircleShape node(10.0f);
-            node.setOrigin(10.0f, 10.0f); // Center the origin
-            node.setPosition(nodePos);
-            if (node.getGlobalBounds().contains(mousePos)) {
-                hoveredNode = nodePos;
-                isNodeHovered = true;
-                break;
-            }
-        }
         if (dragging) {
             sf::Vector2f newPos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
-            sf::Vector2f deltaPos = oldPos - newPos;
-            view.move(deltaPos);
-            oldPos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
+            float deltaX = 0.0f, deltaY = 0.0f;
+            calculate_delta(oldPos.x, oldPos.y, newPos.x, newPos.y, &deltaX, &deltaY);  // Call the assembly function
+            view.move(-deltaX, -deltaY);  // Apply the deltaPos to move the view
+            oldPos = newPos;  // Update oldPos to the new position
+            std::cout << "MouseMoved: " << newPos.x << ", " << newPos.y << " Delta: " << deltaX << ", " << deltaY << std::endl;
+        } else {
+            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
+            isNodeHovered = false;
+            for (const auto& host : hosts) {
+                sf::Vector2f nodePos = hostPositions[host.ip];
+                sf::CircleShape node(10.0f);
+                node.setOrigin(10.0f, 10.0f);
+                node.setPosition(nodePos);
+                if (node.getGlobalBounds().contains(mousePos)) {
+                    hoveredNode = nodePos;
+                    isNodeHovered = true;
+                    break;
+                }
+            }
         }
     }
-    // Restrict panning within bounds
-    sf::Vector2f viewCenter = view.getCenter();
-    viewCenter.x = std::max(viewCenter.x, 400.0f);
-    viewCenter.y = std::max(viewCenter.y, 300.0f);
-    viewCenter.x = std::min(viewCenter.x, static_cast<float>(window.getSize().x) - 400.0f);
-    viewCenter.y = std::min(viewCenter.y, static_cast<float>(window.getSize().y) - 300.0f);
-    view.setCenter(viewCenter);
 }

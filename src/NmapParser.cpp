@@ -3,11 +3,11 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <tinyxml2.h>
 
 std::vector<Host> NmapParser::parseNmapXML(const std::string& filename) {
     std::vector<Host> hosts;
 
-    // Read the entire file into a string
     std::ifstream file(filename);
     if (!file) {
         std::cerr << "Failed to open Nmap XML file: " << filename << "\n";
@@ -18,7 +18,6 @@ std::vector<Host> NmapParser::parseNmapXML(const std::string& filename) {
     buffer << file.rdbuf();
     std::string content = buffer.str();
 
-    // Remove XML declaration and stylesheet processing instruction
     auto xmlDeclPos = content.find("<?xml");
     if (xmlDeclPos != std::string::npos) {
         auto xmlDeclEndPos = content.find("?>", xmlDeclPos);
@@ -35,7 +34,6 @@ std::vector<Host> NmapParser::parseNmapXML(const std::string& filename) {
         }
     }
 
-    // Parse the modified content
     tinyxml2::XMLDocument doc;
     tinyxml2::XMLError eResult = doc.Parse(content.c_str());
     if (eResult != tinyxml2::XML_SUCCESS) {
@@ -61,7 +59,6 @@ std::vector<Host> NmapParser::parseNmapXML(const std::string& filename) {
         }
         hosts.push_back(host);
 
-        // Debug output
         std::cout << "Host IP: " << host.ip << "\n";
         for (const auto& port : host.openPorts) {
             std::cout << "  Open Port: " << port << "\n";
