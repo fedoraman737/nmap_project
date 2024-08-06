@@ -4,7 +4,7 @@
 
 int main() {
     NmapParser parser;
-    std::vector<Host> hosts = parser.parseNmapXML("nmap_output.xml");
+    std::vector<Host> hosts = parser.parseNmapXML("/home/fedora12/CLionProjects/nmap_project/output/nmap_output.xml");
 
     NetworkMap networkMap(hosts);
 
@@ -15,6 +15,7 @@ int main() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+            networkMap.handleEvents(window, event);
         }
 
         window.clear();
