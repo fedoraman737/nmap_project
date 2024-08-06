@@ -1,0 +1,10 @@
+# Ignore everything in the output folder
+output/*
+
+# But keep the folder itself
+!output/
+
+# Ignore any other potentially sensitive or unwanted files
+*.log
+*.tmp
+
