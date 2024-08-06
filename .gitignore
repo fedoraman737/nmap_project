@@ -1,10 +1,27 @@
-# Ignore everything in the output folder
+# Ignore build files
+cmake-build-debug/
+
+# Ignore output folder content
 output/*
 
-# But keep the folder itself
+# But keep the output folder itself
 !output/
 
-# Ignore any other potentially sensitive or unwanted files
+# Ignore IDE-specific files
+.idea/
+*.iml
+
+# Ignore logs and temporary files
 *.log
 *.tmp
+
+# Ignore compiled object files
+*.o
+*.obj
+*.exe
+
+# Ignore temporary system files
+.DS_Store
+Thumbs.db
+
 
