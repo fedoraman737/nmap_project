@@ -1,13 +1,11 @@
-extern "C" {
-    void calculate_delta(float oldX, float oldY, float newX, float newY, float* deltaX, float* deltaY);
-}
-
 #include "NetworkMap.h"
 #include <cmath>
 #include <sstream>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+
+sf::Vector2i lastPos;
 
 NetworkMap::NetworkMap(const std::vector<Host>& hosts) : hosts(hosts) {
     view = sf::View(sf::FloatRect(0, 0, 800, 600));
@@ -172,12 +170,9 @@ void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) 
     }
     if (event.type == sf::Event::MouseMoved) {
         if (dragging) {
-            sf::Vector2f newPos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
-            float deltaX = 0.0f, deltaY = 0.0f;
-            calculate_delta(oldPos.x, oldPos.y, newPos.x, newPos.y, &deltaX, &deltaY);  // Call the assembly function
-            view.move(-deltaX, -deltaY);  // Apply the deltaPos to move the view
-            oldPos = newPos;  // Update oldPos to the new position
-            std::cout << "MouseMoved: " << newPos.x << ", " << newPos.y << " Delta: " << deltaX << ", " << deltaY << std::endl;
+            sf::Vector2i mousePos = sf::Mouse::getPosition();
+            sf::Vector2i delta = lastPos - mousePos;
+		    view.move(delta.x, delta.y);
         } else {
             sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
             isNodeHovered = false;
@@ -193,5 +188,6 @@ void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) 
                 }
             }
         }
+        lastPos = mousePos;
     }
 }
