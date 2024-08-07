@@ -143,6 +143,7 @@ void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) 
         if (event.mouseButton.button == sf::Mouse::Middle) {
             dragging = true;
             oldPos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+            lastPos = sf::Mouse::getPosition(window);
             std::cout << "MouseButtonPressed: " << oldPos.x << ", " << oldPos.y << std::endl;
         } else if (event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
@@ -170,9 +171,11 @@ void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) 
     }
     if (event.type == sf::Event::MouseMoved) {
         if (dragging) {
-            sf::Vector2i mousePos = sf::Mouse::getPosition();
+            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
             sf::Vector2i delta = lastPos - mousePos;
-		    view.move(delta.x, delta.y);
+            view.move(static_cast<float>(delta.x), static_cast<float>(delta.y));
+            lastPos = mousePos;
+            std::cout << "MouseMoved: " << mousePos.x << ", " << mousePos.y << " Delta: " << delta.x << ", " << delta.y << std::endl;
         } else {
             sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
             isNodeHovered = false;
@@ -188,6 +191,5 @@ void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) 
                 }
             }
         }
-        lastPos = mousePos;
     }
 }
