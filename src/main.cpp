@@ -7,7 +7,7 @@
 int main() {
     try {
         NmapParser parser;
-        std::vector<Host> hosts = parser.parseNmapXML("/home/fedora12/CLionProjects/nmap_project/output/nmap_output.xml");
+        std::vector<Host> hosts = parser.parseNmapXML("output/nmap_output.xml");
 
         if (hosts.empty()) {
             std::cerr << "No hosts found in the Nmap XML file. Exiting..." << std::endl;
