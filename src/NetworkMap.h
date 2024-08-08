@@ -31,7 +31,7 @@ private:
 
     void loadFont(const std::string& fontPath);
     void calculatePanLimits();
-    void positionHosts(float centerX, float centerY);
+    void positionHostsHierarchically(float centerX, float centerY, float layerRadius, float radiusIncrement);
     void drawNodes(sf::RenderWindow& window);
     void drawPortText(sf::RenderWindow& window, const Host& host);
     void drawConnections(sf::RenderWindow& window);

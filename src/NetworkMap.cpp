@@ -59,36 +59,34 @@ void NetworkMap::draw(sf::RenderWindow& window) {
     float centerX = static_cast<float>(window.getSize().x) / 2.0f;
     float centerY = static_cast<float>(window.getSize().y) / 2.0f;
 
+    // Assume the first host is the gateway/modem
     hostPositions[hosts[0].ip] = sf::Vector2f(centerX, centerY);
 
     float layerRadius = 200.0f;
     float radiusIncrement = 200.0f;
-    float angleIncrement = 360.0f / static_cast<float>(hosts.size() - 1);
 
-    positionHosts(centerX, centerY);
+    positionHostsHierarchically(centerX, centerY, layerRadius, radiusIncrement);
 
     drawNodes(window);
     drawConnections(window);
     drawHostDetails(window);
 }
 
-void NetworkMap::positionHosts(float centerX, float centerY) {
-    hostPositions[hosts[0].ip] = sf::Vector2f(centerX, centerY);
+void NetworkMap::positionHostsHierarchically(float centerX, float centerY, float layerRadius, float radiusIncrement) {
+    size_t hostIndex = 1;
 
-    float layerRadius = 200.0f;
-    float radiusIncrement = 200.0f;
-    float angleIncrement = 360.0f / static_cast<float>(hosts.size() - 1);
+    while (hostIndex < hosts.size()) {
+        size_t hostsInLayer = std::min(static_cast<size_t>(8 * std::pow(2, layerRadius / radiusIncrement - 1)), hosts.size() - hostIndex);
+        float angleIncrement = 360.0f / static_cast<float>(hostsInLayer);
 
-    for (size_t i = 1; i < hosts.size(); ++i) {
-        float angle = (static_cast<float>(i) - 1) * angleIncrement;
-        float x = centerX + layerRadius * static_cast<float>(std::cos(angle * M_PI / 180.0));
-        float y = centerY + layerRadius * static_cast<float>(std::sin(angle * M_PI / 180.0));
+        for (size_t i = 0; i < hostsInLayer && hostIndex < hosts.size(); ++i, ++hostIndex) {
+            float angle = i * angleIncrement;
+            float x = centerX + layerRadius * static_cast<float>(std::cos(angle * M_PI / 180.0));
+            float y = centerY + layerRadius * static_cast<float>(std::sin(angle * M_PI / 180.0));
 
-        hostPositions[hosts[i].ip] = sf::Vector2f(x, y);
-
-        if (i % 8 == 0) {
-            layerRadius += radiusIncrement;
+            hostPositions[hosts[hostIndex].ip] = sf::Vector2f(x, y);
         }
+        layerRadius += radiusIncrement;
     }
 }
 
