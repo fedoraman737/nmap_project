@@ -9,7 +9,6 @@ NetworkMap::NetworkMap(const std::vector<Host> &hostlist) : hosts(hostlist)
 {
     view = sf::View(sf::FloatRect(0, 0, 800, 600));
     loadFont("../fonts/Roboto-Regular.ttf");
-    zoomFactor = 1;
 }
 
 void NetworkMap::loadFont(const std::string &fontPath)
@@ -38,11 +37,6 @@ void NetworkMap::loadFont(const std::string &fontPath)
 
 void NetworkMap::draw(sf::RenderWindow &window) {
     window.setView(view);
-
-    std::cout << zoomFactor << std::endl;
-
-    view.zoom(zoomFactor);
-	view.setSize(std::max(view.getSize().x, 800.0f), std::max(view.getSize().y, 600.0f));
 
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);

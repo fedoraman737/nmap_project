@@ -15,8 +15,6 @@ public:
 
     sf::View view;
 
-    float zoomFactor;
-
     std::vector<Host> hosts;
     Host *selectedHost = nullptr;
     std::map<std::string, sf::Vector2f> hostPositions;
