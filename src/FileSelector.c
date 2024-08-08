@@ -1,13 +1,13 @@
 #include "FileSelector.h"
 #include <gtk/gtk.h>
-#include <stdio.h>
+#include <cstdio>
 
 static void on_file_selected(GtkWidget *widget, gint response_id, gpointer user_data) {
     if (response_id == GTK_RESPONSE_ACCEPT) {
         GtkFileChooser *chooser = GTK_FILE_CHOOSER(widget);
         char *filename = gtk_file_chooser_get_filename(chooser);
         FILE *file = fopen("selected_file.txt", "w");
-        if (file != NULL) {
+        if (file != nullptr) {
             fprintf(file, "%s\n", filename);
             fclose(file);
         }
@@ -18,10 +18,10 @@ static void on_file_selected(GtkWidget *widget, gint response_id, gpointer user_
 }
 
 void select_nmap_file() {
-    gtk_init(0, NULL);
+    gtk_init(0, nullptr);
 
     GtkWidget *dialog = gtk_file_chooser_dialog_new("Open File",
-                                                    NULL,
+                                                    nullptr,
                                                     GTK_FILE_CHOOSER_ACTION_OPEN,
                                                     "_Cancel", GTK_RESPONSE_CANCEL,
                                                     "_Open", GTK_RESPONSE_ACCEPT,
