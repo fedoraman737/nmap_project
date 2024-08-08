@@ -1,7 +1,3 @@
-extern "C" {
-    void calculate_delta(float oldX, float oldY, float newX, float newY, float* deltaX, float* deltaY);
-}
-
 #include "NetworkMap.h"
 #include <cmath>
 #include <sstream>
@@ -9,50 +5,47 @@ extern "C" {
 #include <filesystem>
 #include <fstream>
 
-NetworkMap::NetworkMap(const std::vector<Host>& hosts) : hosts(hosts) {
+NetworkMap::NetworkMap(const std::vector<Host> &hostlist) : hosts(hostlist)
+{
     view = sf::View(sf::FloatRect(0, 0, 800, 600));
     loadFont("../fonts/Roboto-Regular.ttf");
-    calculatePanLimits();
+    zoomFactor = 1;
 }
 
-void NetworkMap::loadFont(const std::string& fontPath) {
+void NetworkMap::loadFont(const std::string &fontPath)
+{
     std::cerr << "Current working directory: " << std::filesystem::current_path() << "\n";
 
     std::ifstream file(fontPath);
-    if (!file.good()) {
+    if (!file.good())
+    {
         std::cerr << "Font file not found: " << fontPath << "\n";
-    } else {
+    }
+    else
+    {
         std::cerr << "Font file found: " << fontPath << "\n";
     }
 
-    if (!font.loadFromFile(fontPath)) {
+    if (!font.loadFromFile(fontPath))
+    {
         std::cerr << "Failed to load font: " << fontPath << "\n";
-    } else {
+    }
+    else
+    {
         fontLoaded = true;
     }
 }
 
-void NetworkMap::calculatePanLimits() {
-    if (hosts.empty()) return;
-
-    float minX = std::numeric_limits<float>::max();
-    float maxX = std::numeric_limits<float>::min();
-    float minY = std::numeric_limits<float>::max();
-    float maxY = std::numeric_limits<float>::min();
-
-    for (const auto& host : hosts) {
-        sf::Vector2f pos = hostPositions[host.ip];
-        if (pos.x < minX) minX = pos.x;
-        if (pos.x > maxX) maxX = pos.x;
-        if (pos.y < minY) minY = pos.y;
-        if (pos.y > maxY) maxY = pos.y;
-    }
-
-    panLimits = sf::FloatRect(minX, minY, maxX - minX, maxY - minY);
-}
-
-void NetworkMap::draw(sf::RenderWindow& window) {
+void NetworkMap::draw(sf::RenderWindow &window) {
     window.setView(view);
+
+    std::cout << zoomFactor << std::endl;
+
+    view.zoom(zoomFactor);
+	view.setSize(std::max(view.getSize().x, 800.0f), std::max(view.getSize().y, 600.0f));
+
+    sf::CircleShape shape(100.f);
+    shape.setFillColor(sf::Color::Green);
 
     if (hosts.empty()) {
         return;
@@ -132,66 +125,5 @@ void NetworkMap::draw(sf::RenderWindow& window) {
         window.setView(window.getDefaultView());
         window.draw(details);
         window.setView(view);
-    }
-}
-
-void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) {
-    if (event.type == sf::Event::MouseWheelScrolled) {
-        float zoomFactor = (event.mouseWheelScroll.delta > 0) ? 0.9f : 1.1f;
-        view.zoom(zoomFactor);
-        view.setSize(std::max(view.getSize().x, 800.0f), std::max(view.getSize().y, 600.0f));
-    }
-    if (event.type == sf::Event::MouseButtonPressed) {
-        if (event.mouseButton.button == sf::Mouse::Middle) {
-            dragging = true;
-            oldPos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
-            std::cout << "MouseButtonPressed: " << oldPos.x << ", " << oldPos.y << std::endl;
-        } else if (event.mouseButton.button == sf::Mouse::Left) {
-            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
-            isNodeHighlighted = false;
-            for (const auto& host : hosts) {
-                sf::Vector2f nodePos = hostPositions[host.ip];
-                sf::CircleShape node(10.0f);
-                node.setOrigin(10.0f, 10.0f);
-                node.setPosition(nodePos);
-                if (node.getGlobalBounds().contains(mousePos)) {
-                    highlightedNode = nodePos;
-                    isNodeHighlighted = true;
-                    selectedHost = const_cast<Host*>(&host);
-                    std::cout << "Selected host: " << selectedHost->ip << "\n";
-                    break;
-                }
-            }
-        }
-    }
-    if (event.type == sf::Event::MouseButtonReleased) {
-        if (event.mouseButton.button == sf::Mouse::Middle) {
-            dragging = false;
-            std::cout << "MouseButtonReleased" << std::endl;
-        }
-    }
-    if (event.type == sf::Event::MouseMoved) {
-        if (dragging) {
-            sf::Vector2f newPos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
-            float deltaX = 0.0f, deltaY = 0.0f;
-            calculate_delta(oldPos.x, oldPos.y, newPos.x, newPos.y, &deltaX, &deltaY);  // Call the assembly function
-            view.move(-deltaX, -deltaY);  // Apply the deltaPos to move the view
-            oldPos = newPos;  // Update oldPos to the new position
-            std::cout << "MouseMoved: " << newPos.x << ", " << newPos.y << " Delta: " << deltaX << ", " << deltaY << std::endl;
-        } else {
-            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseMove.x, event.mouseMove.y));
-            isNodeHovered = false;
-            for (const auto& host : hosts) {
-                sf::Vector2f nodePos = hostPositions[host.ip];
-                sf::CircleShape node(10.0f);
-                node.setOrigin(10.0f, 10.0f);
-                node.setPosition(nodePos);
-                if (node.getGlobalBounds().contains(mousePos)) {
-                    hoveredNode = nodePos;
-                    isNodeHovered = true;
-                    break;
-                }
-            }
-        }
     }
 }

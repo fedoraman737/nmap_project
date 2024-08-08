@@ -6,30 +6,34 @@
 #include <map>
 #include "Host.h"
 
-class NetworkMap {
+class NetworkMap
+{
 public:
-    NetworkMap(const std::vector<Host>& hosts);
+    NetworkMap(const std::vector<Host> &hosts);
 
-    void draw(sf::RenderWindow& window); // Removed const
-    void handleEvents(sf::RenderWindow& window, const sf::Event& event);
+    void draw(sf::RenderWindow &window);
 
-private:
-    std::vector<Host> hosts;
     sf::View view;
-    bool dragging = false;
+
+    float zoomFactor;
+
+    std::vector<Host> hosts;
+    Host *selectedHost = nullptr;
+    std::map<std::string, sf::Vector2f> hostPositions;
+
     bool isNodeHovered = false;
     bool isNodeHighlighted = false;
-    sf::Vector2f oldPos;
+
     sf::Vector2f hoveredNode;
     sf::Vector2f highlightedNode;
-    Host* selectedHost = nullptr;
-    std::map<std::string, sf::Vector2f> hostPositions;
-    sf::Font font;
+
+private:
     bool fontLoaded = false;
+    sf::Font font;
+
     sf::FloatRect panLimits;
 
-    void loadFont(const std::string& fontPath);
-    void calculatePanLimits();
+    void loadFont(const std::string &fontPath);
 };
 
 #endif // NETWORKMAP_H
