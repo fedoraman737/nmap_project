@@ -23,9 +23,23 @@ add_executable(nmap_project ${SOURCES})
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 target_link_libraries(nmap_project sfml-graphics sfml-window sfml-system)
 
-# Manually specify TinyXML2 paths
-set(TINYXML2_INCLUDE_DIR /usr/include)
-set(TINYXML2_LIBRARY /usr/lib/x86_64-linux-gnu/libtinyxml2.so)
+
+# Find TinyXML2 library and include paths
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if (EXISTS "/usr/lib/x86_64-linux-gnu/libtinyxml2.so")
+        # Debian-based systems
+        set(TINYXML2_INCLUDE_DIR /usr/include)
+        set(TINYXML2_LIBRARY /usr/lib/x86_64-linux-gnu/libtinyxml2.so)
+    elseif (EXISTS "/usr/lib64/libtinyxml2.so")
+        # Fedora-based systems
+        set(TINYXML2_INCLUDE_DIR /usr/include)
+        set(TINYXML2_LIBRARY /usr/lib64/libtinyxml2.so)
+    else()
+        message(FATAL_ERROR "TinyXML2 library not found.")
+    endif()
+else()
+    message(FATAL_ERROR "Unsupported operating system.")
+endif()
 
 include_directories(${TINYXML2_INCLUDE_DIR})
 target_link_libraries(nmap_project ${TINYXML2_LIBRARY})
