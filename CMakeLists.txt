@@ -11,7 +11,8 @@ set(SOURCES
         src/main.cpp
         src/NmapParser.cpp
         src/NetworkMap.cpp
-        src/FileSelector.c)
+        src/FileSelector.c
+)
 
 # Add sources with headers
 set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CXX)
