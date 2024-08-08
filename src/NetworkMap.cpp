@@ -9,7 +9,7 @@ sf::Vector2i lastPos;
 
 NetworkMap::NetworkMap(const std::vector<Host>& hosts) : hosts(hosts) {
     view = sf::View(sf::FloatRect(0, 0, 800, 600));
-    loadFont("../fonts/Roboto-Regular.ttf");
+    loadFont("fonts/Roboto-Regular.ttf");
     calculatePanLimits();
 }
 
