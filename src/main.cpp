@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include "NmapParser.h"
+#include "EventHandler.h"
 #include "NetworkMap.h"
 #include "FileSelector.h"
 #include <iostream>
@@ -27,6 +28,7 @@ int main() {
         std::cout << "Selected Nmap file: " << nmapFilePath << std::endl;
 
         NmapParser parser;
+
         std::vector<Host> hosts = parser.parseNmapXML(nmapFilePath);
 
         if (hosts.empty()) {
@@ -34,9 +36,10 @@ int main() {
             return 1;
         }
 
-        NetworkMap networkMap(hosts);
-
         sf::RenderWindow window(sf::VideoMode(800, 600), "Network Visualizer");
+        std::cout << hosts.size() << " Host\n";
+        NetworkMap networkMap(hosts);
+        EventHandler eventHandler(window, networkMap);
 
         if (!window.isOpen()) {
             std::cerr << "Failed to create SFML window. Exiting..." << std::endl;
@@ -48,7 +51,7 @@ int main() {
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
                     window.close();
-                networkMap.handleEvents(window, event);
+                eventHandler.handle(event);
             }
 
             window.clear();
@@ -56,8 +59,8 @@ int main() {
             window.display();
         }
 
-    } catch (const std::exception& e) {
-        std::cerr << "An error occurred: " << e.what() << std::endl;
+    } catch (const std::exception& error) {
+        std::cerr << "An error occurred: " << error.what() << std::endl;
         return 1;
     } catch (...) {
         std::cerr << "An unknown error occurred." << std::endl;

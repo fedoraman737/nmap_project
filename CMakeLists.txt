@@ -4,13 +4,14 @@ project(nmap_project LANGUAGES CXX ASM)
 set(CMAKE_CXX_STANDARD 17)
 
 # Include directories
-include_directories(include)
+include_directories(/usr/include)
 
 # Add sources
 set(SOURCES
         src/main.cpp
         src/NmapParser.cpp
         src/NetworkMap.cpp
+        src/EventHandler.cpp)
         src/FileSelector.c)
 
 # Add sources with headers
@@ -22,34 +23,8 @@ add_executable(nmap_project ${SOURCES})
 # Find and link SFML
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 target_link_libraries(nmap_project sfml-graphics sfml-window sfml-system)
+target_link_libraries(nmap_project tinyxml2)
 
-# Manually specify TinyXML2 paths
-set(TINYXML2_INCLUDE_DIR /usr/include)
-set(TINYXML2_LIBRARY /usr/lib/x86_64-linux-gnu/libtinyxml2.so)
-
-include_directories(${TINYXML2_INCLUDE_DIR})
-target_link_libraries(nmap_project ${TINYXML2_LIBRARY})
-
-# Have cmake find nasm
-find_program(NASM nasm)
-
-if (NASM)
-    message(STATUS "Found NASM : ${NASM}")
-else()
-    message(FATAL_ERROR "Cannot find NASM")
-endif()
-
-# Define the custom command for the NASM assembly
-add_custom_command(
-        OUTPUT ${CMAKE_SOURCE_DIR}/src/panning.o
-        DEPENDS ${CMAKE_SOURCE_DIR}/src/panning.asm
-        COMMAND ${NASM} -f elf64 -o panning.o ${CMAKE_SOURCE_DIR}/src/panning.asm
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src
-        COMMENT "Generating object file from assembly source"
-)
-
-# Add the generated object file to the target sources
-target_sources(nmap_project PUBLIC ${CMAKE_SOURCE_DIR}/src/panning.o)
 
 # Find and link GTK
 find_package(PkgConfig REQUIRED)

@@ -7,27 +7,33 @@
 #include <string>
 #include "Host.h"  // Include the Host.h file
 
-class NetworkMap {
+class NetworkMap
+{
 public:
-    NetworkMap(const std::vector<Host>& hosts);
+    NetworkMap(const std::vector<Host> &hosts);
 
-    void draw(sf::RenderWindow& window);
-    void handleEvents(sf::RenderWindow& window, const sf::Event& event);
+    void draw(sf::RenderWindow &window);
+
+    sf::View view;
+    std::vector<Host> hosts;
+    Host *selectedHost = nullptr;
+    std::map<std::string, sf::Vector2f> hostPositions;
+
+    bool isNodeHovered = false;
+    bool isNodeHighlighted = false;
+  
+    void handleNodeSelection(sf::RenderWindow& window);
+    void handleNodeHover(sf::RenderWindow& window);
+
+    sf::Vector2f hoveredNode;
+    sf::Vector2f highlightedNode;
 
 private:
-    std::vector<Host> hosts;
-    sf::View view;
-    sf::Font font;
     bool fontLoaded = false;
-    bool dragging = false;
-    sf::Vector2f oldPos;
-    bool isNodeHighlighted = false;
-    sf::Vector2f highlightedNode;
-    bool isNodeHovered = false;
-    sf::Vector2f hoveredNode;
-    Host* selectedHost = nullptr;
+    sf::Font font;
     sf::FloatRect panLimits;
     std::unordered_map<std::string, sf::Vector2f> hostPositions;
+
 
     void loadFont(const std::string& fontPath);
     void calculatePanLimits();
@@ -36,12 +42,6 @@ private:
     void drawPortText(sf::RenderWindow& window, const Host& host);
     void drawConnections(sf::RenderWindow& window);
     void drawHostDetails(sf::RenderWindow& window);
-    void handleZoom(float delta);
-    void handleMousePress(sf::RenderWindow& window, const sf::Event::MouseButtonEvent& event);
-    void handleMouseRelease(const sf::Event::MouseButtonEvent& event);
-    void handleMouseMove(sf::RenderWindow& window, const sf::Event::MouseMoveEvent& event);
-    void handleNodeSelection(sf::RenderWindow& window, const sf::Vector2i& mouseCoords);
-    void handleNodeHover(sf::RenderWindow& window, const sf::Vector2i& mouseCoords);
 };
 
 #endif // NETWORKMAP_H

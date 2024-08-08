@@ -5,52 +5,41 @@
 #include <filesystem>
 #include <fstream>
 
-sf::Vector2i lastPos;
-
-NetworkMap::NetworkMap(const std::vector<Host>& hosts) : hosts(hosts) {
+NetworkMap::NetworkMap(const std::vector<Host> &hostlist) : hosts(hostlist)
+{
     view = sf::View(sf::FloatRect(0, 0, 800, 600));
-    loadFont("fonts/Roboto-Regular.ttf");
-    calculatePanLimits();
+    loadFont("../fonts/Roboto-Regular.ttf");
 }
 
-void NetworkMap::loadFont(const std::string& fontPath) {
+void NetworkMap::loadFont(const std::string &fontPath)
+{
     std::cerr << "Current working directory: " << std::filesystem::current_path() << "\n";
 
     std::ifstream file(fontPath);
-    if (!file.good()) {
+    if (!file.good())
+    {
         std::cerr << "Font file not found: " << fontPath << "\n";
-    } else {
+    }
+    else
+    {
         std::cerr << "Font file found: " << fontPath << "\n";
     }
 
-    if (!font.loadFromFile(fontPath)) {
+    if (!font.loadFromFile(fontPath))
+    {
         std::cerr << "Failed to load font: " << fontPath << "\n";
-    } else {
+    }
+    else
+    {
         fontLoaded = true;
     }
 }
 
-void NetworkMap::calculatePanLimits() {
-    if (hosts.empty()) return;
-
-    float minX = std::numeric_limits<float>::max();
-    float maxX = std::numeric_limits<float>::min();
-    float minY = std::numeric_limits<float>::max();
-    float maxY = std::numeric_limits<float>::min();
-
-    for (const auto& host : hosts) {
-        sf::Vector2f pos = hostPositions[host.ip];
-        if (pos.x < minX) minX = pos.x;
-        if (pos.x > maxX) maxX = pos.x;
-        if (pos.y < minY) minY = pos.y;
-        if (pos.y > maxY) maxY = pos.y;
-    }
-
-    panLimits = sf::FloatRect(minX, minY, maxX - minX, maxY - minY);
-}
-
-void NetworkMap::draw(sf::RenderWindow& window) {
+void NetworkMap::draw(sf::RenderWindow &window) {
     window.setView(view);
+
+    sf::CircleShape shape(100.f);
+    shape.setFillColor(sf::Color::Green);
 
     if (hosts.empty()) {
         return;
@@ -154,61 +143,6 @@ void NetworkMap::drawHostDetails(sf::RenderWindow& window) {
         window.setView(window.getDefaultView());
         window.draw(details);
         window.setView(view);
-    }
-}
-
-void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) {
-    if (event.type == sf::Event::MouseWheelScrolled) {
-        handleZoom(event.mouseWheelScroll.delta);
-    }
-    if (event.type == sf::Event::MouseButtonPressed) {
-        handleMousePress(window, event.mouseButton);
-    }
-    if (event.type == sf::Event::MouseButtonReleased) {
-        handleMouseRelease(event.mouseButton);
-    }
-    if (event.type == sf::Event::MouseMoved) {
-        handleMouseMove(window, event.mouseMove);
-    }
-}
-
-// Handle zooming in and out
-void NetworkMap::handleZoom(float delta) {
-    float zoomFactor = (delta > 0) ? 0.9f : 1.1f;
-    view.zoom(zoomFactor);
-    view.setSize(std::max(view.getSize().x, 800.0f), std::max(view.getSize().y, 600.0f));
-}
-
-// Handle mouse button press events
-void NetworkMap::handleMousePress(sf::RenderWindow& window, const sf::Event::MouseButtonEvent& event) {
-    if (event.button == sf::Mouse::Middle) {
-        dragging = true;
-        oldPos = window.mapPixelToCoords(sf::Vector2i(event.x, event.y));
-        lastPos = sf::Mouse::getPosition(window);
-        std::cout << "MouseButtonPressed: " << oldPos.x << ", " << oldPos.y << std::endl;
-    } else if (event.button == sf::Mouse::Left) {
-        handleNodeSelection(window, sf::Vector2i(event.x, event.y));
-    }
-}
-
-// Handle mouse button release events
-void NetworkMap::handleMouseRelease(const sf::Event::MouseButtonEvent& event) {
-    if (event.button == sf::Mouse::Middle) {
-        dragging = false;
-        std::cout << "MouseButtonReleased" << std::endl;
-    }
-}
-
-// Handle mouse movement events
-void NetworkMap::handleMouseMove(sf::RenderWindow& window, const sf::Event::MouseMoveEvent& event) {
-    if (dragging) {
-        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-        sf::Vector2i delta = lastPos - mousePos;
-        view.move(static_cast<float>(delta.x), static_cast<float>(delta.y));
-        lastPos = mousePos;
-        std::cout << "MouseMoved: " << mousePos.x << ", " << mousePos.y << " Delta: " << delta.x << ", " << delta.y << std::endl;
-    } else {
-        handleNodeHover(window, sf::Vector2i(event.x, event.y));
     }
 }
 
