@@ -26,3 +26,6 @@ Thumbs.db
 
 
 build
+
+.vscode/
+nmap_output.xml

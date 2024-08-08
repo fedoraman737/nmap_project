@@ -19,8 +19,8 @@ private:
     void mouseButtonPressed(sf::Event &event);
     void mouseWheelScrolled(sf::Event &event);
 
-    sf::RenderWindow &window;
     NetworkMap &networkMap;
+    sf::RenderWindow &window;
 
     bool dragging;
     sf::Vector2i lastPos;

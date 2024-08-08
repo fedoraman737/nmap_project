@@ -21,7 +21,7 @@ public:
 
     bool isNodeHovered = false;
     bool isNodeHighlighted = false;
-  
+
     void handleNodeSelection(sf::RenderWindow& window);
     void handleNodeHover(sf::RenderWindow& window);
 
@@ -32,11 +32,9 @@ private:
     bool fontLoaded = false;
     sf::Font font;
     sf::FloatRect panLimits;
-    std::unordered_map<std::string, sf::Vector2f> hostPositions;
 
 
     void loadFont(const std::string& fontPath);
-    void calculatePanLimits();
     void positionHosts(float centerX, float centerY);
     void drawNodes(sf::RenderWindow& window);
     void drawPortText(sf::RenderWindow& window, const Host& host);

@@ -11,7 +11,7 @@ set(SOURCES
         src/main.cpp
         src/NmapParser.cpp
         src/NetworkMap.cpp
-        src/EventHandler.cpp)
+        src/EventHandler.cpp
         src/FileSelector.c)
 
 # Add sources with headers

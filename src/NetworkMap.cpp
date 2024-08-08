@@ -8,7 +8,7 @@
 NetworkMap::NetworkMap(const std::vector<Host> &hostlist) : hosts(hostlist)
 {
     view = sf::View(sf::FloatRect(0, 0, 800, 600));
-    loadFont("../fonts/Roboto-Regular.ttf");
+    loadFont("/usr/share/fonts/opentype/cantarell/Cantarell-Regular.otf");
 }
 
 void NetworkMap::loadFont(const std::string &fontPath)
@@ -147,8 +147,8 @@ void NetworkMap::drawHostDetails(sf::RenderWindow& window) {
 }
 
 // Handle node selection when the mouse is pressed
-void NetworkMap::handleNodeSelection(sf::RenderWindow& window, const sf::Vector2i& mouseCoords) {
-    sf::Vector2f mousePos = window.mapPixelToCoords(mouseCoords);
+void NetworkMap::handleNodeSelection(sf::RenderWindow& window) {
+    sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition());
     isNodeHighlighted = false;
     for (const auto& host : hosts) {
         sf::Vector2f nodePos = hostPositions[host.ip];
@@ -166,8 +166,8 @@ void NetworkMap::handleNodeSelection(sf::RenderWindow& window, const sf::Vector2
 }
 
 // Handle node hover when the mouse is moved
-void NetworkMap::handleNodeHover(sf::RenderWindow& window, const sf::Vector2i& mouseCoords) {
-    sf::Vector2f mousePos = window.mapPixelToCoords(mouseCoords);
+void NetworkMap::handleNodeHover(sf::RenderWindow& window) {
+    sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition());
     isNodeHovered = false;
     for (const auto& host : hosts) {
         sf::Vector2f nodePos = hostPositions[host.ip];
