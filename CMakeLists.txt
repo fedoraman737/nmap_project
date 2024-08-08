@@ -7,12 +7,12 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(/usr/include)
 
 # Add sources
-# Add sources
 set(SOURCES
         src/main.cpp
         src/NmapParser.cpp
         src/NetworkMap.cpp
         src/EventHandler.cpp)
+        src/FileSelector.c)
 
 # Add sources with headers
 set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CXX)
@@ -25,20 +25,12 @@ find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 target_link_libraries(nmap_project sfml-graphics sfml-window sfml-system)
 target_link_libraries(nmap_project tinyxml2)
 
-# Have cmake find nasm
-find_program(NASM nasm)
 
-if (NASM)
-    message(STATUS "Found NASM : ${NASM}")
-else()
-    message(FATAL_ERROR "Cannot find NASM")
-endif()
+# Find and link GTK
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+include_directories(${GTK3_INCLUDE_DIRS})
+link_directories(${GTK3_LIBRARY_DIRS})
+add_definitions(${GTK3_CFLAGS_OTHER})
 
-# Define the custom command for the NASM assembly
-add_custom_command(
-        OUTPUT ${CMAKE_SOURCE_DIR}/src/panning.o
-        DEPENDS ${CMAKE_SOURCE_DIR}/src/panning.asm
-        COMMAND ${NASM} -f elf64 -o panning.o ${CMAKE_SOURCE_DIR}/src/panning.asm
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src
-        COMMENT "Generating object file from assembly source"
-)
+target_link_libraries(nmap_project ${GTK3_LIBRARIES})

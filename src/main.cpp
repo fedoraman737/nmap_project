@@ -2,13 +2,34 @@
 #include "NmapParser.h"
 #include "EventHandler.h"
 #include "NetworkMap.h"
+#include "FileSelector.h"
 #include <iostream>
 #include <exception>
+#include <fstream>
 
 int main() {
     try {
+        std::cout << "Starting file selection..." << std::endl;
+        // Call the file selection function
+        select_nmap_file();
+
+        std::cout << "File selection done. Reading the selected file name..." << std::endl;
+        // Read the selected file name
+        std::ifstream file("selected_file.txt");
+        std::string nmapFilePath;
+        if (!file || !(file >> nmapFilePath)) {
+            std::cerr << "Failed to read the selected Nmap file. Exiting..." << std::endl;
+            return 1;
+        }
+
+        // Clean up the selected_file.txt after reading the file path
+        std::remove("selected_file.txt");
+
+        std::cout << "Selected Nmap file: " << nmapFilePath << std::endl;
+
         NmapParser parser;
-        std::vector<Host> hosts = parser.parseNmapXML("/home/lightmodepidro/Desktop/nmap_project/nmap_output.xml");
+
+        std::vector<Host> hosts = parser.parseNmapXML(nmapFilePath);
 
         if (hosts.empty()) {
             std::cerr << "No hosts found in the Nmap XML file. Exiting..." << std::endl;
