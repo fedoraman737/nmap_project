@@ -7,11 +7,11 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(include)
 
 # Add sources
-# Add sources
 set(SOURCES
         src/main.cpp
         src/NmapParser.cpp
-        src/NetworkMap.cpp)
+        src/NetworkMap.cpp
+        src/FileSelector.c)
 
 # Add sources with headers
 set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CXX)
@@ -25,7 +25,7 @@ target_link_libraries(nmap_project sfml-graphics sfml-window sfml-system)
 
 # Manually specify TinyXML2 paths
 set(TINYXML2_INCLUDE_DIR /usr/include)
-set(TINYXML2_LIBRARY /usr/lib64/libtinyxml2.so)
+set(TINYXML2_LIBRARY /usr/lib/x86_64-linux-gnu/libtinyxml2.so)
 
 include_directories(${TINYXML2_INCLUDE_DIR})
 target_link_libraries(nmap_project ${TINYXML2_LIBRARY})
@@ -50,3 +50,12 @@ add_custom_command(
 
 # Add the generated object file to the target sources
 target_sources(nmap_project PUBLIC ${CMAKE_SOURCE_DIR}/src/panning.o)
+
+# Find and link GTK
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+include_directories(${GTK3_INCLUDE_DIRS})
+link_directories(${GTK3_LIBRARY_DIRS})
+add_definitions(${GTK3_CFLAGS_OTHER})
+
+target_link_libraries(nmap_project ${GTK3_LIBRARIES})
