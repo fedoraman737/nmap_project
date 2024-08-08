@@ -4,6 +4,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <random>
 
 sf::Vector2i lastPos;
 
@@ -65,43 +66,163 @@ void NetworkMap::draw(sf::RenderWindow& window) {
     float layerRadius = 200.0f;
     float radiusIncrement = 200.0f;
 
-    positionHostsHierarchically(centerX, centerY, layerRadius, radiusIncrement);
+    positionHostsUsingForceDirected(centerX, centerY);
 
-    drawNodes(window);
     drawConnections(window);
+    drawNodes(window);
     drawHostDetails(window);
 }
 
-void NetworkMap::positionHostsHierarchically(float centerX, float centerY, float layerRadius, float radiusIncrement) {
-    size_t hostIndex = 1;
+void NetworkMap::positionHostsUsingForceDirected(float centerX, float centerY) {
+    const float repulsiveForceStrength = 2000.0f;
+    const float attractiveForceStrength = 0.05f;
+    const float damping = 0.85f;
+    const int iterations = 100;
+    std::default_random_engine generator;
+    std::uniform_real_distribution<float> distribution(-200.0f, 200.0f);
 
-    while (hostIndex < hosts.size()) {
-        size_t hostsInLayer = std::min(static_cast<size_t>(8 * std::pow(2, layerRadius / radiusIncrement - 1)), hosts.size() - hostIndex);
-        float angleIncrement = 360.0f / static_cast<float>(hostsInLayer);
+    // Initialize positions randomly with a bias towards different quadrants
+    for (size_t i = 1; i < hosts.size(); ++i) {
+        float x = centerX + distribution(generator);
+        float y = centerY + distribution(generator);
 
-        for (size_t i = 0; i < hostsInLayer && hostIndex < hosts.size(); ++i, ++hostIndex) {
-            float angle = i * angleIncrement;
-            float x = centerX + layerRadius * static_cast<float>(std::cos(angle * M_PI / 180.0));
-            float y = centerY + layerRadius * static_cast<float>(std::sin(angle * M_PI / 180.0));
-
-            hostPositions[hosts[hostIndex].ip] = sf::Vector2f(x, y);
+        if (hosts[i].openPorts.empty()) {
+            x -= 300; // Bias for purple nodes
+            y += 300;
+        } else {
+            bool hasCommonPorts = false;
+            for (const auto& otherHost : hosts) {
+                if (hosts[i].ip != otherHost.ip && !otherHost.openPorts.empty()) {
+                    for (const auto& port : hosts[i].openPorts) {
+                        if (std::find(otherHost.openPorts.begin(), otherHost.openPorts.end(), port) != otherHost.openPorts.end()) {
+                            hasCommonPorts = true;
+                            break;
+                        }
+                    }
+                    if (hasCommonPorts) break;
+                }
+            }
+            if (hasCommonPorts) {
+                x += 300; // Bias for green nodes
+                y -= 300;
+            } else {
+                x -= 300; // Bias for blue nodes
+                y -= 300;
+            }
         }
-        layerRadius += radiusIncrement;
+
+        hostPositions[hosts[i].ip] = sf::Vector2f(x, y);
+    }
+
+    // Iterate to apply forces
+    for (int iter = 0; iter < iterations; ++iter) {
+        // Reset forces
+        for (auto& host : hosts) {
+            forces[host.ip] = sf::Vector2f(0.0f, 0.0f);
+        }
+
+        // Calculate repulsive forces between nodes
+        for (size_t i = 0; i < hosts.size(); ++i) {
+            for (size_t j = i + 1; j < hosts.size(); ++j) {
+                sf::Vector2f diff = hostPositions[hosts[i].ip] - hostPositions[hosts[j].ip];
+                float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+                if (distance == 0) {
+                    distance = 0.1f;
+                }
+
+                // Repulsive force for all nodes
+                sf::Vector2f repulsiveForce = (repulsiveForceStrength / (distance * distance)) * diff / distance;
+                forces[hosts[i].ip] += repulsiveForce;
+                forces[hosts[j].ip] -= repulsiveForce;
+            }
+        }
+
+        // Apply forces to positions
+        for (auto& host : hosts) {
+            hostPositions[host.ip] += forces[host.ip] * damping;
+        }
+    }
+
+    // Ensure no overlap by adjusting positions slightly if they are too close
+    const float minDistance = 60.0f;
+    for (size_t i = 0; i < hosts.size(); ++i) {
+        for (size_t j = i + 1; j < hosts.size(); ++j) {
+            sf::Vector2f diff = hostPositions[hosts[i].ip] - hostPositions[hosts[j].ip];
+            float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+            if (distance < minDistance) {
+                sf::Vector2f adjustment = (minDistance - distance) * diff / distance;
+                hostPositions[hosts[i].ip] += adjustment / 2.0f;
+                hostPositions[hosts[j].ip] -= adjustment / 2.0f;
+            }
+        }
     }
 }
 
+
 void NetworkMap::drawNodes(sf::RenderWindow& window) {
     for (const auto& host : hosts) {
-        sf::CircleShape node(10.0f);
-        node.setOrigin(10.0f, 10.0f);
-        node.setFillColor(isNodeHighlighted && hostPositions[host.ip] == highlightedNode ? sf::Color::Red :
-                          isNodeHovered && hostPositions[host.ip] == hoveredNode ? sf::Color::Yellow :
-                          sf::Color::Green);
+        float radius = 10.0f + host.openPorts.size() * 2.0f; // size increases with the number of open ports
+        sf::CircleShape node(radius);
+        node.setOrigin(radius, radius);
 
+        // Determine node color based on ports
+        sf::Color nodeColor;
+        if (host.ip == hosts[0].ip) {
+            nodeColor = sf::Color::White; // Root node -> white color
+        } else if (host.openPorts.empty()) {
+            nodeColor = sf::Color::Magenta; // No open ports -> purple color
+        } else {
+            bool hasCommonPorts = false;
+            for (const auto& otherHost : hosts) {
+                if (host.ip != otherHost.ip && !otherHost.openPorts.empty()) {
+                    for (const auto& port : host.openPorts) {
+                        if (std::find(otherHost.openPorts.begin(), otherHost.openPorts.end(), port) != otherHost.openPorts.end()) {
+                            hasCommonPorts = true;
+                            break;
+                        }
+                    }
+                    if (hasCommonPorts) break;
+                }
+            }
+            if (hasCommonPorts) {
+                nodeColor = sf::Color::Green; // Common ports -> green color
+            } else {
+                nodeColor = sf::Color::Blue; // No common ports -> blue color
+            }
+        }
+
+        // Override color if hovered or selected
+        if (isNodeHighlighted && hostPositions[host.ip] == highlightedNode) {
+            nodeColor = sf::Color::Red; // Active (selected) node -> red color
+        } else if (isNodeHovered && hostPositions[host.ip] == hoveredNode) {
+            nodeColor = sf::Color::Yellow; // Hovered node -> yellow color
+        }
+
+        node.setFillColor(nodeColor);
         node.setPosition(hostPositions[host.ip]);
         window.draw(node);
 
-        drawPortText(window, host);
+        // Draw IP address/hostname with background rectangle
+        sf::Text text;
+        if (fontLoaded) {
+            text.setFont(font);
+        }
+        text.setString(host.ip); // change this to host.hostname if you have hostname information
+        text.setCharacterSize(12);
+        text.setFillColor(sf::Color::White);
+
+        // Calculate text position
+        sf::FloatRect textBounds = text.getLocalBounds();
+        text.setPosition(hostPositions[host.ip].x - textBounds.width / 2.0f, hostPositions[host.ip].y - radius - 25.0f);
+
+        // Draw background rectangle for the text
+        sf::RectangleShape textBackground(sf::Vector2f(textBounds.width + 4.0f, textBounds.height + 4.0f));
+        textBackground.setFillColor(sf::Color(50, 50, 50)); // background color here
+        textBackground.setPosition(text.getPosition().x - 2.0f, text.getPosition().y - 2.0f);
+
+        window.draw(textBackground);
+        window.draw(text);
+
     }
 }
 
@@ -214,12 +335,16 @@ void NetworkMap::handleMouseMove(sf::RenderWindow& window, const sf::Event::Mous
 void NetworkMap::handleNodeSelection(sf::RenderWindow& window, const sf::Vector2i& mouseCoords) {
     sf::Vector2f mousePos = window.mapPixelToCoords(mouseCoords);
     isNodeHighlighted = false;
+
     for (const auto& host : hosts) {
         sf::Vector2f nodePos = hostPositions[host.ip];
-        sf::CircleShape node(10.0f);
-        node.setOrigin(10.0f, 10.0f);
-        node.setPosition(nodePos);
-        if (node.getGlobalBounds().contains(mousePos)) {
+        float radius = 10.0f + host.openPorts.size() * 2.0f; // match the radius used in drawNodes
+
+        // Calculate the distance between the mouse position and the center of the node
+        sf::Vector2f diff = mousePos - nodePos;
+        float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+
+        if (distance <= radius) {
             highlightedNode = nodePos;
             isNodeHighlighted = true;
             selectedHost = const_cast<Host*>(&host);
@@ -229,16 +354,20 @@ void NetworkMap::handleNodeSelection(sf::RenderWindow& window, const sf::Vector2
     }
 }
 
-// Handle node hover when the mouse is moved
+
 void NetworkMap::handleNodeHover(sf::RenderWindow& window, const sf::Vector2i& mouseCoords) {
     sf::Vector2f mousePos = window.mapPixelToCoords(mouseCoords);
     isNodeHovered = false;
+
     for (const auto& host : hosts) {
         sf::Vector2f nodePos = hostPositions[host.ip];
-        sf::CircleShape node(10.0f);
-        node.setOrigin(10.0f, 10.0f);
-        node.setPosition(nodePos);
-        if (node.getGlobalBounds().contains(mousePos)) {
+        float radius = 10.0f + host.openPorts.size() * 2.0f; // Match the radius used in drawNodes
+
+        // Calculate the distance between the mouse position and the center of the node
+        sf::Vector2f diff = mousePos - nodePos;
+        float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+
+        if (distance <= radius) {
             hoveredNode = nodePos;
             isNodeHovered = true;
             break;
