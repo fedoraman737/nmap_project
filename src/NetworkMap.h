@@ -28,6 +28,7 @@ private:
     Host* selectedHost = nullptr;
     sf::FloatRect panLimits;
     std::unordered_map<std::string, sf::Vector2f> hostPositions;
+    std::unordered_map<std::string, sf::Vector2f> forces; // declare forces
 
     void loadFont(const std::string& fontPath);
     void calculatePanLimits();
@@ -42,6 +43,7 @@ private:
     void handleMouseMove(sf::RenderWindow& window, const sf::Event::MouseMoveEvent& event);
     void handleNodeSelection(sf::RenderWindow& window, const sf::Vector2i& mouseCoords);
     void handleNodeHover(sf::RenderWindow& window, const sf::Vector2i& mouseCoords);
+    void positionHostsUsingForceDirected(float centerX, float centerY);
 };
 
 #endif // NETWORKMAP_H
