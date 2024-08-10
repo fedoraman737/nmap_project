@@ -12,6 +12,7 @@ set(SOURCES
         src/NmapParser.cpp
         src/NetworkMap.cpp
         src/FileSelector.c
+        src/DashVisual.cpp
 )
 
 # Add sources with headers

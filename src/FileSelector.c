@@ -1,8 +1,7 @@
 #include "FileSelector.h"
 #include <gtk/gtk.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 static GtkWidget *file_label;
 static GtkWidget *launch_button;
@@ -12,7 +11,7 @@ static void on_file_selected(GtkWidget *widget, gint response_id, gpointer user_
         GtkFileChooser *chooser = GTK_FILE_CHOOSER(widget);
         char *filename = gtk_file_chooser_get_filename(chooser);
         FILE *file = fopen("selected_file.txt", "w");
-        if (file != NULL) {
+        if (file != nullptr) {
             fprintf(file, "%s\n", filename);
             fclose(file);
         }
@@ -106,6 +105,6 @@ void select_nmap_file() {
 
     app = gtk_application_new("com.example.nmapproject", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
-    status = g_application_run(G_APPLICATION(app), 0, NULL);
+    status = g_application_run(G_APPLICATION(app), 0, nullptr);
     g_object_unref(app);
 }

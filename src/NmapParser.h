@@ -7,7 +7,7 @@
 
 class NmapParser {
 public:
-    std::vector<Host> parseNmapXML(const std::string& filePath);
+    static std::vector<Host> parseNmapXML(const std::string& filePath);
 };
 
 #endif // NMAP_PARSER_H

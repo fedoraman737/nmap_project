@@ -2,7 +2,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <algorithm>
 #include <tinyxml2.h>
 
 std::vector<Host> NmapParser::parseNmapXML(const std::string& filename) {
@@ -55,7 +54,7 @@ std::vector<Host> NmapParser::parseNmapXML(const std::string& filename) {
             host.ip = addressElem->Attribute("addr");
         }
         for (tinyxml2::XMLElement* portElem = hostElem->FirstChildElement("ports")->FirstChildElement("port"); portElem; portElem = portElem->NextSiblingElement("port")) {
-            host.openPorts.push_back(portElem->Attribute("portid"));
+            host.openPorts.emplace_back(portElem->Attribute("portid"));
         }
         hosts.push_back(host);
 
