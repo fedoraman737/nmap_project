@@ -13,6 +13,7 @@ set(SOURCES
         src/NetworkMap.cpp
         src/FileSelector.c
         src/DashVisual.cpp
+        src/PortAnalysis.cpp
 )
 
 # Add sources with headers
