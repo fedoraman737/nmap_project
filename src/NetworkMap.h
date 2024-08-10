@@ -29,6 +29,7 @@ private:
     sf::FloatRect panLimits;
     std::unordered_map<std::string, sf::Vector2f> hostPositions;
     std::unordered_map<std::string, sf::Vector2f> forces; // declare forces
+    bool isViewCenteredInitially = false;
 
     void loadFont(const std::string& fontPath);
     void calculatePanLimits();

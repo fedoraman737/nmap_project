@@ -51,31 +51,38 @@ void NetworkMap::calculatePanLimits() {
 }
 
 void NetworkMap::draw(sf::RenderWindow& window) {
+    // Set view initially if it hasn't been centered yet
+    if (!isViewCenteredInitially && !hosts.empty()) {
+        // Determine the center of the window (this will be the initial position for the root node)
+        float centerX = static_cast<float>(window.getSize().x) / 2.0f;
+        float centerY = static_cast<float>(window.getSize().y) / 2.0f;
+
+        // Assume the first host is the gateway/modem and initially position it at the center
+        hostPositions[hosts[0].ip] = sf::Vector2f(centerX, centerY);
+
+        // Position the other hosts using the force-directed algorithm
+        positionHostsUsingForceDirected(centerX, centerY);
+
+        // Set the view to be centered on the root node
+        sf::Vector2f rootPosition = hostPositions[hosts[0].ip];
+        view.setCenter(rootPosition);
+
+        isViewCenteredInitially = true; // Mark that the view has been centered
+    }
+
     window.setView(view);
 
     if (hosts.empty()) {
         return;
     }
 
-    // Determine the center of the window (this will be the initial position for the root node)
-    float centerX = static_cast<float>(window.getSize().x) / 2.0f;
-    float centerY = static_cast<float>(window.getSize().y) / 2.0f;
-
-    // Assume the first host is the gateway/modem and initially position it at the center
-    hostPositions[hosts[0].ip] = sf::Vector2f(centerX, centerY);
-
-    // Position the other hosts using the force-directed algorithm
-    positionHostsUsingForceDirected(centerX, centerY);
-
-    // Now adjust the view to center it on the root node's actual position
-    sf::Vector2f rootPosition = hostPositions[hosts[0].ip];
-    view.setCenter(rootPosition);
-
     // Draw the connections and nodes
     drawConnections(window);
     drawNodes(window);
     drawHostDetails(window);
 }
+
+
 
 void NetworkMap::positionHostsUsingForceDirected(float centerX, float centerY) {
     const float repulsiveForceStrength = 2000.0f;
