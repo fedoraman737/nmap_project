@@ -9,7 +9,7 @@
 
 class NetworkMap {
 public:
-    NetworkMap(const std::vector<Host>& hosts);
+    explicit NetworkMap(const std::vector<Host>& hosts);
 
     void draw(sf::RenderWindow& window);
     void handleEvents(sf::RenderWindow& window, const sf::Event& event);

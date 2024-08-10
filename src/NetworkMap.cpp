@@ -57,17 +57,21 @@ void NetworkMap::draw(sf::RenderWindow& window) {
         return;
     }
 
+    // Determine the center of the window (this will be the initial position for the root node)
     float centerX = static_cast<float>(window.getSize().x) / 2.0f;
     float centerY = static_cast<float>(window.getSize().y) / 2.0f;
 
-    // Assume the first host is the gateway/modem
+    // Assume the first host is the gateway/modem and initially position it at the center
     hostPositions[hosts[0].ip] = sf::Vector2f(centerX, centerY);
 
-    float layerRadius = 200.0f;
-    float radiusIncrement = 200.0f;
-
+    // Position the other hosts using the force-directed algorithm
     positionHostsUsingForceDirected(centerX, centerY);
 
+    // Now adjust the view to center it on the root node's actual position
+    sf::Vector2f rootPosition = hostPositions[hosts[0].ip];
+    view.setCenter(rootPosition);
+
+    // Draw the connections and nodes
     drawConnections(window);
     drawNodes(window);
     drawHostDetails(window);
@@ -75,9 +79,8 @@ void NetworkMap::draw(sf::RenderWindow& window) {
 
 void NetworkMap::positionHostsUsingForceDirected(float centerX, float centerY) {
     const float repulsiveForceStrength = 2000.0f;
-    const float attractiveForceStrength = 0.05f;
     const float damping = 0.85f;
-    const int iterations = 100;
+    const int iterations = 50;
     std::default_random_engine generator;
     std::uniform_real_distribution<float> distribution(-200.0f, 200.0f);
 
@@ -161,7 +164,7 @@ void NetworkMap::positionHostsUsingForceDirected(float centerX, float centerY) {
 
 void NetworkMap::drawNodes(sf::RenderWindow& window) {
     for (const auto& host : hosts) {
-        float radius = 10.0f + host.openPorts.size() * 2.0f; // size increases with the number of open ports
+        float radius = 10.0f + static_cast<float>(host.openPorts.size()) * 2.0f; // size increases with the number of open ports
         sf::CircleShape node(radius);
         node.setOrigin(radius, radius);
 
@@ -269,12 +272,18 @@ void NetworkMap::drawHostDetails(sf::RenderWindow& window) {
         details.setString(ss.str());
         details.setCharacterSize(14);
         details.setFillColor(sf::Color::White);
-        details.setPosition(10.0f, 10.0f);
+
+        // Set the position to the top right corner
+        float textX = static_cast<float>(window.getSize().x) - details.getLocalBounds().width - 10.0f;  // 10px padding from the right
+        float textY = 10.0f;  // 10px padding from the top
+        details.setPosition(textX, textY);
+
         window.setView(window.getDefaultView());
         window.draw(details);
         window.setView(view);
     }
 }
+
 
 void NetworkMap::handleEvents(sf::RenderWindow& window, const sf::Event& event) {
     if (event.type == sf::Event::MouseWheelScrolled) {
@@ -338,7 +347,7 @@ void NetworkMap::handleNodeSelection(sf::RenderWindow& window, const sf::Vector2
 
     for (const auto& host : hosts) {
         sf::Vector2f nodePos = hostPositions[host.ip];
-        float radius = 10.0f + host.openPorts.size() * 2.0f; // match the radius used in drawNodes
+        float radius = 10.0f + static_cast<float>(host.openPorts.size()) * 2.0f; // match the radius used in drawNodes
 
         // Calculate the distance between the mouse position and the center of the node
         sf::Vector2f diff = mousePos - nodePos;
@@ -361,7 +370,7 @@ void NetworkMap::handleNodeHover(sf::RenderWindow& window, const sf::Vector2i& m
 
     for (const auto& host : hosts) {
         sf::Vector2f nodePos = hostPositions[host.ip];
-        float radius = 10.0f + host.openPorts.size() * 2.0f; // Match the radius used in drawNodes
+        float radius = 10.0f + static_cast<float>(host.openPorts.size()) * 2.0f; // Match the radius used in drawNodes
 
         // Calculate the distance between the mouse position and the center of the node
         sf::Vector2f diff = mousePos - nodePos;

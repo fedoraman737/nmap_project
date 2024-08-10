@@ -2,6 +2,7 @@
 #include "NmapParser.h"
 #include "NetworkMap.h"
 #include "FileSelector.h"
+#include "DashVisual.h"
 #include <iostream>
 #include <exception>
 #include <fstream>
@@ -9,11 +10,8 @@
 int main() {
     try {
         std::cout << "Starting file selection..." << std::endl;
-        // Call the file selection function
         select_nmap_file();
 
-        std::cout << "File selection done. Reading the selected file name..." << std::endl;
-        // Read the selected file name
         std::ifstream file("selected_file.txt");
         std::string nmapFilePath;
         if (!file || !(file >> nmapFilePath)) {
@@ -21,10 +19,7 @@ int main() {
             return 1;
         }
 
-        // Clean up the selected_file.txt after reading the file path
         std::remove("selected_file.txt");
-
-        std::cout << "Selected Nmap file: " << nmapFilePath << std::endl;
 
         NmapParser parser;
         std::vector<Host> hosts = parser.parseNmapXML(nmapFilePath);
@@ -34,25 +29,28 @@ int main() {
             return 1;
         }
 
+        // Create the window with full screen width and height in windowed mode
+        sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+        sf::RenderWindow window(sf::VideoMode(desktop.width, desktop.height), "Network Visualizer with Dashboard", sf::Style::Resize | sf::Style::Close);
+
+        // Initialize the dashboard with full height of the window
+        DashVisual dashVisual(200.0f, static_cast<float>(window.getSize().y));  // Use getSize().y for height
+        dashVisual.loadFont("fonts/Roboto-Regular.ttf");
+
         NetworkMap networkMap(hosts);
 
-        sf::RenderWindow window(sf::VideoMode(800, 600), "Network Visualizer");
-
-        if (!window.isOpen()) {
-            std::cerr << "Failed to create SFML window. Exiting..." << std::endl;
-            return 1;
-        }
-
         while (window.isOpen()) {
-            sf::Event event;
+            sf::Event event{};
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
                     window.close();
+
                 networkMap.handleEvents(window, event);
             }
 
             window.clear();
-            networkMap.draw(window);
+            networkMap.draw(window);  // Draw the network map
+            dashVisual.draw(window);  // Draw the fixed dashboard last
             window.display();
         }
 
