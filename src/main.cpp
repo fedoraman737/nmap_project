@@ -6,6 +6,7 @@
 #include <iostream>
 #include <exception>
 #include <fstream>
+#include "PortAnalysis.h"
 
 int main() {
     try {
@@ -38,6 +39,7 @@ int main() {
         dashVisual.loadFont("fonts/Roboto-Regular.ttf");
 
         NetworkMap networkMap(hosts);
+        PortAnalysis portAnalysis(hosts);
 
         while (window.isOpen()) {
             sf::Event event{};
@@ -45,12 +47,28 @@ int main() {
                 if (event.type == sf::Event::Closed)
                     window.close();
 
-                networkMap.handleEvents(window, event);
+                // Handle events based on the active view
+                if (dashVisual.isActiveButton("Network Map")) {
+                    networkMap.handleEvents(window, event);
+                } else if (dashVisual.isActiveButton("Port Analysis")) {
+                    portAnalysis.handleEvents(window, event);
+                }
             }
 
+            // Clear the window once per frame
             window.clear();
-            networkMap.draw(window);  // Draw the network map
-            dashVisual.draw(window);  // Draw the fixed dashboard last
+
+            // Draw based on the active view
+            if (dashVisual.isActiveButton("Network Map")) {
+                networkMap.draw(window);
+            } else if (dashVisual.isActiveButton("Port Analysis")) {
+                portAnalysis.draw(window);
+            }
+
+            // Draw the dashboard last to ensure it stays on top
+            dashVisual.draw(window);
+
+            // Display the rendered frame
             window.display();
         }
 

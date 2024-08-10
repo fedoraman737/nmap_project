@@ -29,6 +29,7 @@ DashVisual::DashVisual(float width, float height) {
 
     // Set the first button as active
     visualizeBtn.setFillColor(sf::Color(139, 0, 0));  // Dark red for active button
+    activeButtonText = "Network Map";  // Track the active button text
 }
 
 void DashVisual::initButton(sf::RectangleShape &button, const std::string &text, float yPos, bool isActive) {
@@ -69,6 +70,7 @@ void DashVisual::draw(sf::RenderWindow &window) {
     window.setView(window.getDefaultView()); // Reset to default view to draw fixed elements
 
     handleMouseHover(window); // Handle hover effect before drawing
+    handleMouseClick(window); // Handle mouse click to switch active button
 
     window.draw(dashboard);
 
@@ -102,3 +104,47 @@ void DashVisual::handleMouseHover(const sf::RenderWindow &window) {
     }
 }
 
+void DashVisual::handleMouseClick(sf::RenderWindow &window) {
+    static bool isMouseButtonHeld = false; // Track whether the mouse button is held down
+
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        if (!isMouseButtonHeld) { // Check if this is the first detection of the click
+            isMouseButtonHeld = true; // Mark the button as held
+
+            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+
+            if (visualizeBtn.getGlobalBounds().contains(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
+                if (activeButtonText != "Network Map") {
+                    activeButtonText = "Network Map";  // Set the active button text first
+                    setActiveButton(visualizeBtn);
+                }
+            } else if (analyzeBtn.getGlobalBounds().contains(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
+                if (activeButtonText != "Port Analysis") {
+                    activeButtonText = "Port Analysis";  // Set the active button text first
+                    setActiveButton(analyzeBtn);
+                }
+            } else if (helpBtn.getGlobalBounds().contains(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y))) {
+                if (activeButtonText != "Vulnerability Insights") {
+                    activeButtonText = "Vulnerability Insights";  // Set the active button text first
+                    setActiveButton(helpBtn);
+                }
+            }
+        }
+    } else {
+        isMouseButtonHeld = false; // Reset when the mouse button is released
+    }
+}
+
+void DashVisual::setActiveButton(sf::RectangleShape &button) {
+    // Reset all buttons to default grey before updating the active one
+    for (auto &btn : buttons) {
+        btn.setFillColor(sf::Color(100, 100, 100));
+    }
+
+    // Set the clicked button to dark red
+    button.setFillColor(sf::Color(139, 0, 0));
+}
+
+bool DashVisual::isActiveButton(const std::string &buttonText) const {
+    return activeButtonText == buttonText;
+}
